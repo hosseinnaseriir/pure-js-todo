@@ -1,0 +1,11 @@
+.list-item {
+  font-family: "roboto";
+  color: gold;
+}
+.title-input {
+  background-color: transparent;
+  border: none;
+  font-size: inherit;
+  outline: none;
+  color: white;
+}
