@@ -4,9 +4,12 @@ const todoDesc = document.getElementById("desc");
 const mainList = document.getElementById("main");
 import { toastify } from "./../components/toastify.js";
 
-const savedLCTodos = localStorage.getItem("todosList");
-const parseSavedLCTodos = JSON.parse(savedLCTodos) || [];
-let savedTodos = [...parseSavedLCTodos];
+function getLoccatedTodos() {
+  const savedLCTodos = localStorage.getItem("todosList");
+  return JSON.parse(savedLCTodos)?.sort((a, b) => a.id - b.id) || [];
+}
+
+let savedTodos = [...getLoccatedTodos()];
 
 const createNewTodo = (title, desc, id, checked) => {
   // create a list item for new todo
@@ -35,9 +38,9 @@ const createNewTodo = (title, desc, id, checked) => {
 
   // cretae action buttons for our todo
   const todoActions = `<div>
-      <button>DEL</button>
-      <button>EDIT</button>
-      <button>CHECK</button>
+      <button data-id="${id}">DEL</button>
+      <button data-id="${id}">EDIT</button>
+      <button data-id="${id}">CHECK</button>
       </div>`;
 
   //put  action buttons to our listItem
@@ -47,9 +50,13 @@ const createNewTodo = (title, desc, id, checked) => {
   mainList.appendChild(listItem);
 };
 
-savedTodos.forEach((todo) =>
-  createNewTodo(todo.title, todo.desc, todo.id, todo.checked)
-);
+function renderTodoElements() {
+  getLoccatedTodos().forEach((todo) =>
+    createNewTodo(todo.title, todo.desc, todo.id, todo.checked)
+  );
+}
+
+renderTodoElements();
 
 // handle add new todo
 export const handleCreateNewTodo = (event) => {
@@ -80,31 +87,30 @@ export const handleCreateNewTodo = (event) => {
 };
 
 mainList.addEventListener("click", (e) => {
+  const id = e.target.dataset.id;
   if (e.target.innerText === "DEL") {
-    const todoEl = e.target.parentElement.parentElement;
-    console.log(todoEl.id);
-    const filtredTodos = savedTodos.filter(
-      (item) => item.id !== Number(todoEl.id)
+    const filtredTodos = getLoccatedTodos().filter(
+      (item) => item.id !== Number(id)
     );
     localStorage.setItem("todosList", JSON.stringify(filtredTodos));
-    location.reload();
+    mainList.innerHTML = "";
+    renderTodoElements();
   } else if (e.target.innerText === "CHECK") {
-    // get li element
-    const todoEl = e.target.parentElement.parentElement;
     // get our todo in localStrage with ID
-    const filtredTodo = savedTodos.filter(
-      (item) => item.id === Number(todoEl.id)
+    const filtredTodo = getLoccatedTodos().filter(
+      (item) => item.id === Number(id)
     );
     // update our todo in localStrage with ID
     const updateFiltredTodo = { ...filtredTodo[0], checked: true };
     // delete our todo from localstorage
-    const filtredTodos = savedTodos.filter(
-      (item) => item.id !== Number(todoEl.id)
+    const filtredTodos = getLoccatedTodos().filter(
+      (item) => item.id !== Number(id)
     );
     // update localStorage with updated todo
     const updateSavedTodos = [...filtredTodos, updateFiltredTodo];
     localStorage.setItem("todosList", JSON.stringify(updateSavedTodos));
-    location.reload();
+    mainList.innerHTML = "";
+    renderTodoElements();
   } else if (e.target.innerText === "EDIT") {
     const todoEl = e.target.parentElement.parentElement;
     todoEl.children[0].children[0].disabled = false;
@@ -112,17 +118,21 @@ mainList.addEventListener("click", (e) => {
     todoEl.children[0].children[0].style.backgroundColor = "blue";
     e.target.innerText = "SAVE";
     e.target.addEventListener("click", () => {
-      const filtredTodo = savedTodos.filter(
-        (item) => item.id === Number(todoEl.id)
+      const filtredTodo = getLoccatedTodos().filter(
+        (item) => item.id === Number(id)
       );
-      const updateFiltredTodo = { ...filtredTodo[0], title: todoEl.children[0].children[0].value };
+      const updateFiltredTodo = {
+        ...filtredTodo[0],
+        title: todoEl.children[0].children[0].value,
+      };
 
-      const filtredTodos = savedTodos.filter(
-        (item) => item.id !== Number(todoEl.id)
+      const filtredTodos = getLoccatedTodos().filter(
+        (item) => item.id !== Number(id)
       );
       const updateSavedTodos = [...filtredTodos, updateFiltredTodo];
       localStorage.setItem("todosList", JSON.stringify(updateSavedTodos));
-      location.reload();
+      mainList.innerHTML = "";
+      renderTodoElements();
     });
   }
 });
